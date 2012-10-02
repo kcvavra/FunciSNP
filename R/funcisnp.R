@@ -5,99 +5,99 @@
 ## All rights reversed.
 
 ReadRegionsFile <- function(regions.file, search.window=200000) {
-  # Reads a tab seperated regions file in the form
-  # chr:loc snp_name    ethnicity
-  # 8:130685457 rs4295627 EUR
-  # returns the variables for snp.range, snp.name, and snp.ethno
-  snp.regions <- read.table(regions.file)
-  snp.region.split <- unlist(strsplit(as.vector(snp.regions[,1]), ":"))
+        # Reads a tab seperated regions file in the form
+        # chr:loc snp_name    ethnicity
+        # 8:130685457 rs4295627 EUR
+        # returns the variables for snp.range, snp.name, and snp.ethno
+        snp.regions <- read.table(regions.file)
+        snp.region.split <- unlist(strsplit(as.vector(snp.regions[,1]), ":"))
 
-  snp.chromosome <- as.character(sapply(strsplit(as.vector(snp.regions[,1]),
-                                                 ":"), function(x) x[1]));
-  snp.loc <- as.numeric(sapply(strsplit(as.vector(snp.regions[,1]), ":"),
-                               function(x) x[2]));
+        snp.chromosome <- as.character(sapply(strsplit(as.vector(snp.regions[,1]),
+                                                       ":"), function(x) x[1]));
+        snp.loc <- as.numeric(sapply(strsplit(as.vector(snp.regions[,1]), ":"),
+                                     function(x) x[2]));
 
 
-  snp.region.start <- round(snp.loc - search.window/2)
-  snp.region.end <- round(snp.loc + search.window/2)
+        snp.region.start <- round(snp.loc - search.window/2)
+        snp.region.end <- round(snp.loc + search.window/2)
 
-  snp.name <- as.character(snp.regions[, 2])
-  snp.ethno <- as.character(snp.regions[, 3])
-  snp.regions <- data.frame(snp.chromosome,
-                            snp.loc,
-                            snp.region.start,
-                            snp.region.end,
-                            snp.name,
-                            snp.ethno,
-                            stringsAsFactors = FALSE)
-  snp.regions$snp.ethno <- toupper(snp.regions$snp.ethno)
-  tag.snp.all <- subset(snp.regions, snp.ethno == "ALL")
-  snp.regions <- subset(snp.regions, snp.ethno != "ALL")
-  if(dim(tag.snp.all)[1] > 0){
-    for(i in 1:dim(tag.snp.all)[1]){
-      x <- tag.snp.all[i, ]
-      tag.snp.afr <- x
-      tag.snp.afr["snp.ethno"] <- "AFR"
-      tag.snp.amr <- x
-      tag.snp.amr["snp.ethno"] <- "AMR"
-      tag.snp.asn <- x
-      tag.snp.asn["snp.ethno"] <- "ASN"
-      tag.snp.eur <- x
-      tag.snp.eur["snp.ethno"] <- "EUR"
-      tag.snp.each <- rbind(x,
-                            tag.snp.afr,
-                            tag.snp.amr,
-                            tag.snp.asn,
-                            tag.snp.eur)
-      snp.regions <- rbind(snp.regions, tag.snp.each)
-    }
-  }
-  return(snp.regions)
+        snp.name <- as.character(snp.regions[, 2])
+        snp.ethno <- as.character(snp.regions[, 3])
+        snp.regions <- data.frame(snp.chromosome,
+                                  snp.loc,
+                                  snp.region.start,
+                                  snp.region.end,
+                                  snp.name,
+                                  snp.ethno,
+                                  stringsAsFactors = FALSE)
+        snp.regions$snp.ethno <- toupper(snp.regions$snp.ethno)
+        tag.snp.all <- subset(snp.regions, snp.ethno == "ALL")
+        snp.regions <- subset(snp.regions, snp.ethno != "ALL")
+        if(dim(tag.snp.all)[1] > 0){
+                for(i in 1:dim(tag.snp.all)[1]){
+                        x <- tag.snp.all[i, ]
+                        tag.snp.afr <- x
+                        tag.snp.afr["snp.ethno"] <- "AFR"
+                        tag.snp.amr <- x
+                        tag.snp.amr["snp.ethno"] <- "AMR"
+                        tag.snp.asn <- x
+                        tag.snp.asn["snp.ethno"] <- "ASN"
+                        tag.snp.eur <- x
+                        tag.snp.eur["snp.ethno"] <- "EUR"
+                        tag.snp.each <- rbind(x,
+                                              tag.snp.afr,
+                                              tag.snp.amr,
+                                              tag.snp.asn,
+                                              tag.snp.eur)
+                        snp.regions <- rbind(snp.regions, tag.snp.each)
+                }
+        }
+        return(snp.regions)
 }
 
 ServerCheck <- function(primary.server, verbose=TRUE) {
-  ncbi <- "ftp://ftp-trace.ncbi.nih.gov/1000genomes/"
-  ebi <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/"
-  test.file <- "ftp/release/20110521/phase1_integrated_calls.20101123.ALL.panel"
-  if(primary.server == "ebi"){
-    primary.server <- ebi
-    secondary.server <- ncbi
-    primary.server.name <- "ebi"
-    secondary.server.name <- "ncbi"
-  } else {
-    primary.server <- ncbi
-    secondary.server <- ebi
-    primary.server.name <- "ncbi"
-    secondary.server.name <- "ebi"
-  }
-  if(verbose) {
-    message("trying ", primary.server.name, " as 1000 genomes server\n")
-  }
-  server.up <- try(url(paste(primary.server, test.file, sep=""), open = "rt"),
-                   silent=T)
-  server.error <- inherits(server.up, "try-error")
-  if(server.error) {
-    if(verbose) warning(primary.server.name, " failed \ntrying ",
-                        secondary.server.name,
-                        " as 1000 genomes server")
-    rm(server.error)
-    server.up <- try(url(paste(secondary.server, test.file, sep=""),
-                         open = "rt"), silent=T)
-    server.error <- inherits(server.up, "try-error")
-    if(server.error) {
-      if(verbose) warning(secondary.server.name, " failed")
-      close(server.up)
-      stop("Neither EBI nor NCBI mirrors were found")
-    } else {
-      if(verbose) {
-        message("OK using ", secondary.server.name, " : ", secondary.server)
-      }
-      close(server.up)
-      return(secondary.server)
-    }
-  } else {
-    if(verbose) {
-      message("OK using ", primary.server.name, " : ", primary.server)
+        ncbi <- "ftp://ftp-trace.ncbi.nih.gov/1000genomes/"
+        ebi <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/"
+        test.file <- "ftp/release/20110521/phase1_integrated_calls.20101123.ALL.panel"
+        if(primary.server == "ebi"){
+                primary.server <- ebi
+                secondary.server <- ncbi
+                primary.server.name <- "ebi"
+                secondary.server.name <- "ncbi"
+        } else {
+                primary.server <- ncbi
+                secondary.server <- ebi
+                primary.server.name <- "ncbi"
+                secondary.server.name <- "ebi"
+        }
+        if(verbose) {
+                message("trying ", primary.server.name, " as 1000 genomes server\n")
+        }
+        server.up <- try(url(paste(primary.server, test.file, sep=""), open = "rt"),
+                         silent=T)
+        server.error <- inherits(server.up, "try-error")
+        if(server.error) {
+                if(verbose) warning(primary.server.name, " failed \ntrying ",
+                                    secondary.server.name,
+                                    " as 1000 genomes server")
+                rm(server.error)
+                server.up <- try(url(paste(secondary.server, test.file, sep=""),
+                                     open = "rt"), silent=T)
+                server.error <- inherits(server.up, "try-error")
+                if(server.error) {
+                        if(verbose) warning(secondary.server.name, " failed")
+                        close(server.up)
+                        stop("Neither EBI nor NCBI mirrors were found")
+                } else {
+                        if(verbose) {
+                                message("OK using ", secondary.server.name, " : ", secondary.server)
+                        }
+                        close(server.up)
+                        return(secondary.server)
+                }
+        } else {
+                if(verbose) {
+                        message("OK using ", primary.server.name, " : ", primary.server)
     }
     close(server.up)
     return(primary.server)
@@ -1375,9 +1375,8 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
     split = TRUE;
   }
   if(save){
-    try(dir.create(path=paste(pathplot, "/FunciSNP.",
-                              package.version("FunciSNP"), "/plots",
-                              sep=""), showWarnings = FALSE, recursive=TRUE), silent=TRUE) 
+    try(dir.create(path=paste(pathplot, "/FunciSNP/plots", sep=""),
+                   showWarnings = FALSE, recursive=TRUE), silent=TRUE) 
   }
   if(split){
     if(splitbysnp){
@@ -1392,108 +1391,101 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
          theme(legend.position = "none") + 
          facet_wrap(chromosome ~ tag.snp.id)
          if(save){
-           ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP.",
-                             package.version("FunciSNP"),
-                             "/plots/Distribution_for_each_tagSNP.pdf",
-                             sep=""),
-                  plot=p,
-             dpi = 600,
-             width = save.width, 
-             height = save.height,
-             units = "mm")
-                  
+                 ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP/plots/Distribution_for_each_tagSNP.pdf",
+                                                sep=""),
+                                 plot=p,
+                                 dpi = 600,
+                                 width = save.width, 
+                                 height = save.height,
+                                 units = "mm")
+
          }else{
-           return(p)
+                 return(p)
          }
     } else {
-      tt <- count(df = dat, vars = "R.squared")
-      tt <- na.omit(tt)
-      ht <- range(tt[, "freq"])[2]*1.2
-      hh <- dat[,c("corr.snp.id","R.squared")]
-      hh <- na.omit(hh)
-      hh.c <- count(round(hh$R.squared,digits = 1))
-      dimnames(hh.c)[[1]] <- hh.c[,1]
-      k <- c(hh.c["0",2], hh.c["0.1",2], hh.c["0.2",2],
-             hh.c["0.3",2], hh.c["0.4",2], hh.c["0.5",2],
-             hh.c["0.6",2], hh.c["0.7",2], hh.c["0.8",2],
-             hh.c["0.9",2], hh.c["1",2])
-      k[is.na(k)] <- 0;
-      if(save){
-        pdf(file=paste(pathplot, "/FunciSNP.",
-                       package.version("FunciSNP"),
-                       "/plots/Distribution_for_all_tagSNP.pdf",
-                       sep=""), width=10, height=10)
-      }
-      plot(tt, 
-           xlim = c(0, 1), 
-           ylim = c(0, ht), 
-           pch = "*", 
-           main = paste(
-                        "Distribution of 1kgSNPs by R\u00B2 values\n",
-                        "Total # of 1kgSNPs: ",dim(dat)[1],
-                        "\n(with an Rsq value: ", sum(hh.c$freq),
-                        "; unique 1kgSNPs: ", 
-                        length(unique(hh$corr.snp.id)),")", 
-                        sep = ""),
-           xlab = "R\u00B2 values (0-1)", 
-           ylab = "Number of 1kgSNPs")
-      abline(v = 0.1, lty = 2, col = "red")
-      abline(v = 0.2, lty = 2, col = "red")
-      abline(v = 0.3, lty = 2, col = "red")
-      abline(v = 0.4, lty = 2, col = "red")
-      abline(v = 0.5, col = "black")
-      abline(v = 0.6, lty = 2, col = "green")
-      abline(v = 0.7, lty = 2, col = "green")
-      abline(v = 0.8, lty = 2, col = "green")
-      abline(v = 0.9, lty = 2, col = "green")
-      abline(h = ht*.90, col = "black", lty = 2)
-      text(0.05, ht*.95, as.character(k[1]+k[2]))
-      text(0.15, ht*.95, as.character(k[3]))
-      text(0.25, ht*.95, as.character(k[4]))
-      text(0.35, ht*.95, as.character(k[5]))
-      text(0.45, ht*.95, as.character(k[6]))
-      text(0.55, ht*.95, as.character(k[7]))
-      text(0.65, ht*.95, as.character(k[8]))
-      text(0.75, ht*.95, as.character(k[9]))
-      text(0.85, ht*.95, as.character(k[10]))
-      text(0.95, ht*.95, as.character(k[11]))
-      if(save){
-        dev.off() 
-      }	
+            tt <- count(df = dat, vars = "R.squared")
+            tt <- na.omit(tt)
+            ht <- range(tt[, "freq"])[2]*1.2
+            hh <- dat[,c("corr.snp.id","R.squared")]
+            hh <- na.omit(hh)
+            hh.c <- count(round(hh$R.squared,digits = 1))
+            dimnames(hh.c)[[1]] <- hh.c[,1]
+            k <- c(hh.c["0",2], hh.c["0.1",2], hh.c["0.2",2],
+                   hh.c["0.3",2], hh.c["0.4",2], hh.c["0.5",2],
+                   hh.c["0.6",2], hh.c["0.7",2], hh.c["0.8",2],
+                   hh.c["0.9",2], hh.c["1",2])
+            k[is.na(k)] <- 0;
+            if(save){
+                    pdf(file=paste(pathplot, "/FunciSNP/plots/Distribution_for_all_tagSNP.pdf", sep=""), width=10, height=10)
+            }
+            plot(tt, 
+                 xlim = c(0, 1), 
+                 ylim = c(0, ht), 
+                 pch = "*", 
+                 main = paste(
+                              "Distribution of 1kgSNPs by R\u00B2 values\n",
+                              "Total # of 1kgSNPs: ",dim(dat)[1],
+                              "\n(with an Rsq value: ", sum(hh.c$freq),
+                              "; unique 1kgSNPs: ", 
+                              length(unique(hh$corr.snp.id)),")", 
+                              sep = ""),
+                 xlab = "R\u00B2 values (0-1)", 
+                 ylab = "Number of 1kgSNPs")
+            abline(v = 0.1, lty = 2, col = "red")
+            abline(v = 0.2, lty = 2, col = "red")
+            abline(v = 0.3, lty = 2, col = "red")
+            abline(v = 0.4, lty = 2, col = "red")
+            abline(v = 0.5, col = "black")
+            abline(v = 0.6, lty = 2, col = "green")
+            abline(v = 0.7, lty = 2, col = "green")
+            abline(v = 0.8, lty = 2, col = "green")
+            abline(v = 0.9, lty = 2, col = "green")
+            abline(h = ht*.90, col = "black", lty = 2)
+            text(0.05, ht*.95, as.character(k[1]+k[2]))
+            text(0.15, ht*.95, as.character(k[3]))
+            text(0.25, ht*.95, as.character(k[4]))
+            text(0.35, ht*.95, as.character(k[5]))
+            text(0.45, ht*.95, as.character(k[6]))
+            text(0.55, ht*.95, as.character(k[7]))
+            text(0.65, ht*.95, as.character(k[8]))
+            text(0.75, ht*.95, as.character(k[9]))
+            text(0.85, ht*.95, as.character(k[10]))
+            text(0.95, ht*.95, as.character(k[11]))
+            if(save){
+                    dev.off() 
+            }	
     }
   }
   if(tagSummary){
-    try(dir.create(path=paste(pathplot, "/FunciSNP.",
-                              package.version("FunciSNP"), "/plots",
-                              sep=""), showWarnings = FALSE, recursive=TRUE), silent=TRUE)
+          try(dir.create(path=paste(pathplot, "/FunciSNP/plots", sep=""), showWarnings = FALSE, recursive=TRUE), silent=TRUE)
 
-    ### ggplot2 plots#####
+          ### ggplot2 plots#####
 
 
-    all.s <- try(dat[which(dat$R.squared >= rsq), ], silent = TRUE)
-    all.ss <- try(dat[which(dat$R.squared < rsq), ], silent = TRUE)
-    try(all.s$r.2 <- c("Yes"), silent = TRUE)
-    try(all.ss$r.2 <- c("No"), silent = TRUE)
-    if(nrow(all.s) > 0 && nrow(all.ss) > 0) {
-      all <- try(rbind(all.s, all.ss), silent = TRUE)
-    } else {
-      if(nrow(all.s) > 0 && nrow(all.ss) <= 0) {
-        all <- all.s
-      }
-      if(nrow(all.s) <= 0 && nrow(all.ss) > 0) {
-        all <- all.ss
-      }
-      if(nrow(all.s) <= 1 && nrow(all.ss) <= 0) {
-        return()
-      }
-    }
-    for( i in 1:length(summary(as.factor(all[,"bio.feature"]))) ){
-      bio <- names(summary(as.factor(all[,"bio.feature"])))
-      tmp <- all[which(all$bio.feature == bio[i]), ]
-      ## plot r.2 values
-      p <- ggplot(tmp, aes(x=R.squared, fill=factor(r.2))) + 
-      geom_histogram(binwidth=0.05) + 
-      geom_vline(xintercept = rsq, linetype=2) +
+          all.s <- try(dat[which(dat$R.squared >= rsq), ], silent = TRUE)
+          all.ss <- try(dat[which(dat$R.squared < rsq), ], silent = TRUE)
+          try(all.s$r.2 <- c("Yes"), silent = TRUE)
+          try(all.ss$r.2 <- c("No"), silent = TRUE)
+          if(nrow(all.s) > 0 && nrow(all.ss) > 0) {
+                  all <- try(rbind(all.s, all.ss), silent = TRUE)
+          } else {
+                  if(nrow(all.s) > 0 && nrow(all.ss) <= 0) {
+                          all <- all.s
+                  }
+                  if(nrow(all.s) <= 0 && nrow(all.ss) > 0) {
+                          all <- all.ss
+                  }
+                  if(nrow(all.s) <= 1 && nrow(all.ss) <= 0) {
+                          return()
+                  }
+          }
+          for( i in 1:length(summary(as.factor(all[,"bio.feature"]))) ){
+                  bio <- names(summary(as.factor(all[,"bio.feature"])))
+                  tmp <- all[which(all$bio.feature == bio[i]), ]
+                  ## plot r.2 values
+                  p <- ggplot(tmp, aes(x=R.squared, fill=factor(r.2))) + 
+                  geom_histogram(binwidth=0.05) + 
+                  geom_vline(xintercept = rsq, linetype=2) +
       scale_x_continuous("R\u00B2 Values (0-1)", limits=c(0,1)) + 
       scale_y_continuous("Total # of 1kgSNPs associated with riskSNP") + 
       scale_fill_manual(values = c("Yes" = "Red", "No" = "Black")) +
@@ -1503,8 +1495,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       theme(legend.position = "none") +
          facet_wrap(chromosome ~ tag.snp.id)
 
-         ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP.",
-                           package.version("FunciSNP"), "/plots/",
+         ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP/plots/",
                            bio[i],"_R2summary_riskSNP.pdf",sep=""),
                 plot=p,
              dpi = 600,
@@ -1529,8 +1520,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                             bio[i], sep="")) +
          theme(legend.position = "none") +
          facet_wrap(chromosome ~ tag.snp.id)
-         ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP.",
-                           package.version("FunciSNP"), "/plots/",
+         ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP/plots/",
                            bio[i],"_R2vsDist_riskSNP.pdf",sep=""),
                 plot=p,
              dpi = 600,
@@ -1540,7 +1530,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
          cat("Finished plotting ", i, "/",length(bio), "\n")
     }
     message("\n\nSee ",
-            paste("FunciSNP.",package.version("FunciSNP"),"/plots/",sep=""),
+            paste("FunciSNP","/plots/",sep=""),
             " folder in ", pathplot, " for all plots.\n\n")
   }
   if(heatmap){
@@ -1652,9 +1642,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
     }
     ### reverse matrix/dataframe x <- x[nrow(x):1, ]
     if(save) {
-      ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP.",
-                            package.version("FunciSNP"),
-                            "/plots/FunciSNP_heatmap.eps", sep=""),
+      ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP/plots/FunciSNP_heatmap.eps", sep=""),
              plot=plot.here, bg = "white",
              dpi = 600,
              width = save.width, 
@@ -1694,9 +1682,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       scale_fill_manual(values = c("1.YES" = "Red", "2.NO" = "Black"),
                         "Overlap")
       if(save){
-        ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP.",
-                          package.version("FunciSNP"),
-                          "/plots/Genomic_Summary_All.pdf", sep=""),
+        ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP/plots/Genomic_Summary_All.pdf", sep=""),
                plot=qd,
                dpi = 600,
                width = save.width, 
@@ -1738,9 +1724,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       scale_y_continuous("Percent of Total 1kgSNPs at R\u00B2 cut-off") +
       facet_wrap(~ r2)
          if(save){
-           ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP.",
-                             package.version("FunciSNP"),
-                             "/plots/Genomic_Summary_by_rsq.", rsq, ".pdf",
+           ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP/plots/Genomic_Summary_by_rsq.", rsq, ".pdf",
                              sep=""),
                   plot=qp,
              dpi = 600,
