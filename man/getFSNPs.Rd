@@ -13,7 +13,7 @@ getFSNPs(snp.regions.file, bio.features.loc = NULL,
                      built.in.biofeatures = TRUE,
                      par.threads=detectCores()/2,
                      verbose = par.threads < 2, method.p = "BH",
-                     search.window = 200000, primary.server = "ebi")
+                     search.window = 200000)
 
 }
 \arguments{
@@ -41,9 +41,6 @@ getFSNPs(snp.regions.file, bio.features.loc = NULL,
 	\item{search.window}{
 		an integer: genomic window size used to extract all available correlated SNPs from the 1000 genomes db. The window size is centered around the tagSNP position as defined in the regions.file.
 	}
-    \item{primary.server}{
-        string: Choose between "ebi" and "ncbi" as the 1000 genomes project server attempted first.
-    }
 }
 \details{
 This is the main funtion of FunciSNP. It will identify correlated SNPs which are in linkage disequilibrium (LD) to a known disease associated tagSNP. It will also determine if the correlated SNP in LD to the tagSNP overlaps a genomic biological feature. Correlated SNPs are directly imported from the current public release of the 1000 genomes database. 1000 genomes ftp servers available for the 1000 genomes public data: 1) National Center for Biotechnology Information (NCBI) \url{ftp://ftp-trace.ncbi.nih.gov/1000genomes/}; 2) European Bioinformatics Institute (EBI) \url{ftp://ftp.1000genomes.ebi.ac.uk/vol1/}.
