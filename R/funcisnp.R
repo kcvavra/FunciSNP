@@ -599,8 +599,7 @@ FilterByFeatures <- function(bio.features.file = NULL, tag.snp.name,
   if(identical(bio.features.file, NULL)) {
     snps.included <- close.snp.ranges
   } else {
-    bio.features.file.interval <- import.bed(bio.features.file, asRangedData =
-                                         FALSE)
+    bio.features.file.interval <- import.bed(bio.features.file)
     bio.features.file.interval <- IRanges::sort(bio.features.file.interval)
     elementMetadata(bio.features.file.interval) <- NULL
     elementMetadata(bio.features.file.interval)[, "feature"] <- ending.in.bed[[length(ending.in.bed)]]
