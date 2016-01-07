@@ -170,11 +170,11 @@ CreateCorrelatedSNPs<- function(tag.snp.name, snp.list, primary.server,
   }
   if(!(tag.snp.error)){
       overlapping.features(correlated.snps(tag.snp.complete)) <-
-          IRanges::unlist(GRangesList(lapply(as.character(bio.features.file),
-                                             FilterByFeatures,
-                                             tag.snp.name=tag.snp.name,
-                                             tag.snp.complete=tag.snp.complete,
-                                             verbose=verbose)))
+          unlist(GRangesList(lapply(as.character(bio.features.file),
+                                    FilterByFeatures,
+                                    tag.snp.name=tag.snp.name,
+                                    tag.snp.complete=tag.snp.complete,
+                                    verbose=verbose)))
       overlapping.snps <-
           unique(names(overlapping.features(correlated.snps(tag.snp.complete))))
       tag.snp.complete <- FilteredLDTesting(tag.snp.complete, verbose)
@@ -393,8 +393,8 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
 
 
   ##### modified code from GGtools vcf2sm and parsVCFrec to work with remote tabix files
-  if (Rsamtools:::isOpen(kgeno)) Rsamtools:::close.TabixFile(kgeno)
-  Rsamtools:::open.TabixFile(kgeno)
+  if (isOpen(kgeno)) close.TabixFile(kgeno)
+  open.TabixFile(kgeno)
   #  tabix.header <-
   #    try(strsplit(headerTabix(kgeno)$header, split="\t"),
   #        silent = TRUE)
@@ -442,7 +442,7 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
   for (i in 1:nsnp) mat[,i] = out[[i]]$calls
   rownames(mat) <- sampids
   colnames(mat) <- rsid
-  Rsamtools:::close.TabixFile(kgeno)
+  close.TabixFile(kgeno)
   snps.geno <- new("SnpMatrix", mat)
   snps.support <- NULL
   snps.support <- data.frame(CHROM=sapply(out, "[[", "chr"), POS=sapply(out, "[[", "loc"), ID=sapply(out, "[[", "id"), REF=sapply(out, "[[", "ref"), ALT=sapply(out, "[[", "alt"), stringsAsFactors = FALSE)
@@ -470,8 +470,8 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
       kgeno <- TabixFile(variants.reference)
     }
     ##### modified code from GGtools vcf2sm and parsVCFeec to work with remote tabix files
-    if (Rsamtools:::isOpen(kgeno)) Rsamtools:::close.TabixFile(kgeno)
-    Rsamtools:::open.TabixFile(kgeno)
+    if (isOpen(kgeno)) close.TabixFile(kgeno)
+    open.TabixFile(kgeno)
     tabix.header <-
       try(strsplit(headerTabix(kgeno)$header, split="\t"),
           silent = TRUE)
@@ -525,7 +525,7 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
     for (i in 1:nsnp) mat[,i] = out[[i]]$calls
     rownames(mat) <- sampids
     colnames(mat) <- rsid
-    Rsamtools:::close.TabixFile(kgeno)
+    close.TabixFile(kgeno)
     snps.geno <- new("SnpMatrix", mat)
     snps.support <- sapply(out, "[[", "support")
     ## End Code Adpated from GGtools
@@ -612,7 +612,7 @@ FilterByFeatures <- function(bio.features.file = NULL, tag.snp.name,
   }
 
   if(length(snps.included) >= 1) {
-    snps.included <- IRanges::unlist(GRangesList(snps.included))
+    snps.included <- unlist(GRangesList(snps.included))
     names(snps.included) <- names(close.snp.ranges)[subjectHits(overlaps)]
     if(identical(overlapping.features(correlated.snps(tag.snp.complete)),
                  GRanges())) {
@@ -824,7 +824,7 @@ AnnotateSummary <- function(snp.list, verbose=TRUE) {
 
                 summary.snp.list <- lapply(snp.list, SNPSummary)
                 summary.snp.list <- summary.snp.list[!sapply(summary.snp.list, is.null)]
-                summary.snp.list <- IRanges::unlist(GRangesList(summary.snp.list))
+                summary.snp.list <- unlist(GRangesList(summary.snp.list))
 
                 names(summary.snp.list) <-
                         paste(names(summary.snp.list),
@@ -906,7 +906,7 @@ AnnotateSummary <- function(snp.list, verbose=TRUE) {
                 cat("Adding gene annotations")
                 #    refseqgenes <- system.file('extdata/annotation/refseqgenes.rda', package='FunciSNP')
                 #    load(refseqgenes)
-               txdb <<- TxDb.Hsapiens.UCSC.hg19.knownGene 
+                txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene 
 
                 nearest.TSS <- annotatePeakInBatch(myPeakList = rd.corr.snp.loc,
                                                    AnnotationData = refseqgenes,
