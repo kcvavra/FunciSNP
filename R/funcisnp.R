@@ -1429,7 +1429,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
     row.ord <- order.dendrogram(dd.row)
     xx <- all.s[1:(nrow(all.s)), row.ord]
     xx_names <- attr(xx, "dimnames")
-    df <- as.data.frame(xx)
+    df <- as.data.frame(as(xx, "matrix"))
     colnames(df) <- xx_names[[2]]
     df$sig <- xx_names[[1]]
     df$sig <- with(df, factor(sig, levels=sig, ordered=T))
