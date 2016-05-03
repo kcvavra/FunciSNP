@@ -1,0 +1,61 @@
+import(methods)
+import(BiocGenerics)
+importFrom(Biobase, package.version)
+import(S4Vectors)
+import(IRanges)
+import(GenomicRanges)
+import(Rsamtools)
+importFrom(rtracklayer, as.data.frame, import.bed)
+importFrom(parallel, mclapply, detectCores)
+importFrom(plyr, adply, ldply, count)
+importFrom(snpStats, ld, row.summary, col.summary)
+#import(GGtools)
+import(TxDb.Hsapiens.UCSC.hg19.knownGene)
+import(ChIPpeakAnno)
+importFrom(ggplot2, aes, element_blank, element_rect, element_text,
+    facet_wrap, geom_bar, geom_histogram, geom_point, geom_text, geom_tile,
+    geom_vline, ggplot, ggsave, ggtitle, guide_colorbar, guide_legend, guides,
+    labs, scale_colour_manual, scale_fill_gradient, scale_fill_manual,
+    scale_size_manual, scale_x_continuous, scale_x_discrete,
+    scale_y_continuous, theme, theme_bw, theme_grey, theme_set, theme_update)
+importFrom(VariantAnnotation, locateVariants, AllVariants, FiveUTRVariants, ThreeUTRVariants)
+importFrom(reshape, melt.data.frame, melt.array, melt.list, melt)
+import(scales)
+import(FunciSNP.data)
+
+exportMethods(
+    "alt.allele<-", "alt.allele",
+    "chr<-", "chr",
+    "correlated.snps<-", "correlated.snps",
+    "yafsnp.dprime<-", "yafsnp.dprime",
+    "genotype<-", "genotype",
+    "pop.genotype", "pop.genotype<-",
+    "overlapping.features<-", "overlapping.features",
+    "population<-", "population",
+    "position<-", "position",
+    "ref.allele<-", "ref.allele",
+    "yafsnp.rsq<-", "yafsnp.rsq",
+    "yafsnp.pvalue", "yafsnp.pvalue<-",
+    "snpid<-", "snpid"
+)
+
+exportClasses(CorrelatedSNPs, TagSNP, TSList)
+
+export(
+#functions
+    getFSNPs, FunciSNPAnnotateSummary, FunciSNPplot, FunciSNPbed, FunciSNPtable, FunciSNPsummaryOverlaps, FunciSNPidsFromSummary,
+#methods
+    "alt.allele<-", "alt.allele",
+    "chr<-", "chr",
+    "correlated.snps<-", "correlated.snps",
+    "yafsnp.dprime<-", "yafsnp.dprime",
+    "genotype<-", "genotype",
+    "pop.genotype", "pop.genotype<-",
+    "overlapping.features<-", "overlapping.features",
+    "population<-", "population",
+    "position<-", "position",
+    "ref.allele<-", "ref.allele",
+    "yafsnp.rsq<-", "yafsnp.rsq",
+    "yafsnp.pvalue", "yafsnp.pvalue<-",
+    "snpid<-", "snpid"
+    )
