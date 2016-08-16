@@ -55,9 +55,12 @@ ReadRegionsFile <- function(regions.file, search.window=200000) {
   return(snp.regions)
 }
 
+#Changed server addresses from FTP to http due to potential issues at our worksite.
 ServerCheck <- function(primary.server, verbose=TRUE) {
-    ncbi <- "ftp://ftp-trace.ncbi.nih.gov/1000genomes/"
-    ebi <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/"
+#    ncbi <- "ftp://ftp-trace.ncbi.nih.gov/1000genomes/"
+    ncbi <- "http://ftp-trace.ncbi.nih.gov/1000genomes/"
+#    ebi <- "ftp://ftp.1000genomes.ebi.ac.uk/vol1/"
+    ebi <- "http://ftp.1000genomes.ebi.ac.uk/vol1/"
     apollo <- "ftp://asclepius.hsc.usc.edu/1000genomes/"
     test.file <- "ftp/release/20110521/phase1_integrated_calls.20101123.ALL.panel"
     if(primary.server == "ebi"){
@@ -187,7 +190,7 @@ CreateCorrelatedSNPs<- function(tag.snp.name, snp.list, primary.server,
       message("Tag SNP ", tag.id, " has an error; skipping ahead")
       return(NULL)
   }
-  gc(verbose = FALSE)
+  gc(verbose = TRUE)
 }
 
 CreatePopulations <- function(primary.server="ncbi") {
@@ -196,7 +199,7 @@ CreatePopulations <- function(primary.server="ncbi") {
     EUR <- NULL
     AMR <- NULL
     ALL <- NULL
-    onek.genome.server <- ServerCheck(primary.server, verbose = FALSE)
+    onek.genome.server <- ServerCheck(primary.server, verbose = TRUE)
     manifest <- read.delim(paste(onek.genome.server,
                                  "ftp/release/20110521/phase1_integrated_calls.20101123.ALL.panel",
                                  sep=""), sep="\t", header = FALSE)
@@ -314,7 +317,7 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
   tag.id <- snpid(snp.list[[tag.snp.name]])
   window.size <- prettyNum(window.size, big.mark=",", scientific = FALSE)
   if(verbose) message("loading ", tag.id, " window size: ", window.size, " bp")
-  onek.genome.server <- ServerCheck(primary.server, verbose = FALSE)
+  onek.genome.server <- ServerCheck(primary.server, verbose = TRUE)
   variants.reference <-
     paste(onek.genome.server,
           "/ftp/release/20110521/ALL.chr",
@@ -382,7 +385,7 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
     } else if(primary.server == "apollo"){
         primary.server <- "ncbi"
     }
-    onek.genome.server <- ServerCheck(primary.server, verbose = FALSE)
+    onek.genome.server <- ServerCheck(primary.server, verbose = TRUE)
     variants.reference <-
         paste(onek.genome.server,
               "/ftp/release/20110521/ALL.chr",
@@ -461,7 +464,7 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
       } else {
         primary.server <- "ncbi"
       }
-      onek.genome.server <- ServerCheck(primary.server, verbose = FALSE)
+      onek.genome.server <- ServerCheck(primary.server, verbose = TRUE)
       variants.reference <-
         paste(onek.genome.server,
               "/ftp/release/20110521/ALL.chr",
@@ -558,7 +561,7 @@ PullInVariants <- function(tag.snp.name, snp.list, primary.server, snp.region,
                                 as.character(snps.support[, 3])),
                    ref.allele=as.character(snps.support[, 4]),
                    alt.allele=as.character(snps.support[, 5]),
-                   genotype=new("CorrGeno", 
+                   genotype=new("CorrGeno",
                                 SnpMatrix=snps.geno,
                                 populations=populations
                                 )
@@ -906,7 +909,7 @@ AnnotateSummary <- function(snp.list, verbose=TRUE) {
                 cat("Adding gene annotations")
                 #    refseqgenes <- system.file('extdata/annotation/refseqgenes.rda', package='FunciSNP')
                 #    load(refseqgenes)
-                txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene 
+                txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 
                 nearest.TSS <- annotatePeakInBatch(myPeakList = rd.corr.snp.loc,
                                                    AnnotationData = refseqgenes,
@@ -976,13 +979,13 @@ AnnotateSummary <- function(snp.list, verbose=TRUE) {
                 # Promoter 2000 bp down 200 bp up
                 promoter.rows <- as.numeric(subset(ddd, genomic.feature=="promoter")[,1])
                 if(isTRUE(length(unique(promoter.rows)) > 0)){
-                        summary.snp.list[promoter.rows,"Promoter"] <- "YES"; 
+                        summary.snp.list[promoter.rows,"Promoter"] <- "YES";
                         summary.snp.list$Promoter <- as.factor(summary.snp.list$Promoter)
                 }
                 ## utr5 defined
                 utr5.rows <- as.numeric(subset(ddd, genomic.feature=="fiveUTR")[,1])
                 if(isTRUE(length(unique(utr5.rows)) > 0)){
-                        summary.snp.list[utr5.rows,"utr5"] <- "YES"; 
+                        summary.snp.list[utr5.rows,"utr5"] <- "YES";
                         summary.snp.list$utr5 <- as.factor(summary.snp.list$utr5)
                 }
                 ## exon defined
@@ -1038,7 +1041,7 @@ bedColors <- function(dat, rsq=0, filename, filepath) {
   png(filename=paste(filepath, filename, sep="/"), width=800, height=200)
   z <- seq(-1, 1, length = 200)
   n <- max.freq
-  image(matrix(z, ncol = 1), col = jet.colors(n), 
+  image(matrix(z, ncol = 1), col = jet.colors(n),
         xaxt = "n", yaxt = "n", main = "Overlap count Key")
   box()
   par(usr = c(0, n, 0, n))
@@ -1086,7 +1089,7 @@ FunciSNPsummaryOverlaps <- function(dat, rsq=0) {
   overlap.counts[is.na(overlap.counts)] <- 0
   colnames(overlap.counts) <- paste("bio.",as.character(columnnames),sep="")
   overlap.counts <- rbind(overlap.counts, colSums(overlap.counts))
-  rownames(overlap.counts)[length(rownames(overlap.counts))] <- 
+  rownames(overlap.counts)[length(rownames(overlap.counts))] <-
     "TOTAL # 1kgSNPs"
   return(overlap.counts)
   }
@@ -1211,36 +1214,36 @@ FunciSNPbed <- function(dat, rsq, path=getwd(), filename=NULL) {
 
   d.cor$rsquare <- round(d.cor$rsquare, digits=4);
   d.tag$rsquare <- round(d.tag$rsquare, digits=4);
-  d.cor$snp.id <- paste(d.cor$snp.id, "--", d.cor$rsquare, sep="")  
-  y <- rbind(d.tag, d.cor); 
+  d.cor$snp.id <- paste(d.cor$snp.id, "--", d.cor$rsquare, sep="")
+  y <- rbind(d.tag, d.cor);
   con <- file(paste(path,filename,sep="/"),open="wt")
   writeLines(paste("browser position chr",d.s[1,1],":",
-                   if(d.s[1,6]<d.s[1,8]){    
+                   if(d.s[1,6]<d.s[1,8]){
                      paste(d.s[1,6]-500,"-",d.s[1,8]+500,sep="")
                    }else{
                      paste(d.s[1,8]-500,"-",d.s[1,6]+500,sep="")
                    }
                    ,
-                   "\ntrack name=\"FunciSNP_results\" description=\"Funci{SNP} Results : Rsquare cut-off at ", rsq, " (ver. ", 
+                   "\ntrack name=\"FunciSNP_results\" description=\"Funci{SNP} Results : Rsquare cut-off at ", rsq, " (ver. ",
                    package.version("FunciSNP"),")\" visibility=3 itemRgb=\"On\"", sep=""), con)
   write.table(y, row.names=F, col.names=F, sep="\t", file=con, quote=F)
   close(con)
-  message("####\nBed file \"", filename, 
+  message("####\nBed file \"", filename,
           "\" created successfully.\n(See folder: \"", path,"\")")
   cat("Total corSNP (RED): ", dim(d.cor)[1],"\nTotal tagSNP (BLK): ",
       dim(d.tag)[1],"\n")
-  message("\nTo view results, submit bed file as a\ncustom track in ", 
-          "UCSC Genome Browser (genome.ucsc.edu),", 
+  message("\nTo view results, submit bed file as a\ncustom track in ",
+          "UCSC Genome Browser (genome.ucsc.edu),",
           " \n\nNow have fun with your new YAFSNPs",
           if(dim(d.cor)[1]>1){"s"}else{""},"!!\n####");
 
 }
 
 
-FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE, 
+FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                           tagSummary = FALSE, heatmap = FALSE, heatmap.key = FALSE,
                           genomicSum = FALSE, save = FALSE, pathplot=getwd(),
-                          text.size=10, save.width=7, save.height=7) 
+                          text.size=10, save.width=7, save.height=7)
 {
   save.width <- save.width * 25.4
   save.height <- save.height * 25.4
@@ -1254,19 +1257,19 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
   }
   if(save){
     try(dir.create(path=paste(pathplot, "/FunciSNP", "/plots",
-                              sep=""), showWarnings = FALSE, recursive=TRUE), silent=TRUE) 
+                              sep=""), showWarnings = FALSE, recursive=TRUE), silent=TRUE)
   }
   if(split){
     if(splitbysnp){
       p <- ggplot(dat, aes(x = R.squared)) +
-      geom_histogram(binwidth = 0.05) + 
-      geom_vline(xintercept = 0.5, linetype = 2) + 
+      geom_histogram(binwidth = 0.05) +
+      geom_vline(xintercept = 0.5, linetype = 2) +
       ggtitle("Distribution of 1kgSNPs for each tagSNP\nat R\u00B2 values") +
       scale_x_continuous(
-                         "1kgSNPs R\u00B2 to tagSNP (0-1)") + 
+                         "1kgSNPs R\u00B2 to tagSNP (0-1)") +
          scale_y_continuous(
-                            "Total # of 1kgSNPs associated with tagSNP") + 
-         theme(legend.position = "none") + 
+                            "Total # of 1kgSNPs associated with tagSNP") +
+         theme(legend.position = "none") +
          facet_wrap(chromosome ~ tag.snp.id)
          if(save){
            ggplot2::ggsave(filename=paste(pathplot, "/FunciSNP",
@@ -1274,10 +1277,10 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                              sep=""),
                   plot=p,
              dpi = 600,
-             width = save.width, 
+             width = save.width,
              height = save.height,
              units = "mm")
-                  
+
          }else{
            return(p)
          }
@@ -1299,18 +1302,18 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                        "/plots/Distribution_for_all_tagSNP.pdf",
                        sep=""), width=10, height=10)
       }
-      plot(tt, 
-           xlim = c(0, 1), 
-           ylim = c(0, ht), 
-           pch = "*", 
+      plot(tt,
+           xlim = c(0, 1),
+           ylim = c(0, ht),
+           pch = "*",
            main = paste(
                         "Distribution of 1kgSNPs by R\u00B2 values\n",
                         "Total # of 1kgSNPs: ",dim(dat)[1],
                         "\n(with an Rsq value: ", sum(hh.c$freq),
-                        "; unique 1kgSNPs: ", 
-                        length(unique(hh$corr.snp.id)),")", 
+                        "; unique 1kgSNPs: ",
+                        length(unique(hh$corr.snp.id)),")",
                         sep = ""),
-           xlab = "R\u00B2 values (0-1)", 
+           xlab = "R\u00B2 values (0-1)",
            ylab = "Number of 1kgSNPs")
       abline(v = 0.1, lty = 2, col = "red")
       abline(v = 0.2, lty = 2, col = "red")
@@ -1333,8 +1336,8 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       text(0.85, ht*.95, as.character(k[10]))
       text(0.95, ht*.95, as.character(k[11]))
       if(save){
-        dev.off() 
-      }	
+        dev.off()
+      }
     }
   }
   if(tagSummary){
@@ -1365,15 +1368,15 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       bio <- names(summary(as.factor(all[,"bio.feature"])))
       tmp <- all[which(all$bio.feature == bio[i]), ]
       ## plot r.2 values
-      p <- ggplot(tmp, aes(x=R.squared, fill=factor(r.2))) + 
-      geom_histogram(binwidth=0.05) + 
+      p <- ggplot(tmp, aes(x=R.squared, fill=factor(r.2))) +
+      geom_histogram(binwidth=0.05) +
       geom_vline(xintercept = rsq, linetype=2) +
-      scale_x_continuous("R\u00B2 Values (0-1)", limits=c(0,1)) + 
-      scale_y_continuous("Total # of 1kgSNPs associated with riskSNP") + 
+      scale_x_continuous("R\u00B2 Values (0-1)", limits=c(0,1)) +
+      scale_y_continuous("Total # of 1kgSNPs associated with riskSNP") +
       scale_fill_manual(values = c("Yes" = "Red", "No" = "Black")) +
       ggtitle(paste("Distribution of 1kgSNPs R\u00B2",
-                         "\ndivided by tagSNP & Overlapping biofeature:\n ", 
-                         bio[i], sep="")) + 
+                         "\ndivided by tagSNP & Overlapping biofeature:\n ",
+                         bio[i], sep="")) +
       theme(legend.position = "none") +
          facet_wrap(chromosome ~ tag.snp.id)
 
@@ -1381,24 +1384,24 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                            bio[i],"_R2summary_riskSNP.pdf",sep=""),
                 plot=p,
              dpi = 600,
-             width = save.width, 
+             width = save.width,
              height = save.height,
              units = "mm")
 
 
          ## plot r.2 vs. distance values
-         p <- ggplot(tmp, aes(x=R.squared, y=distance.from.tag, colour=r.2, 
-                         size=factor(r.2))) + 
-         geom_point() + 
+         p <- ggplot(tmp, aes(x=R.squared, y=distance.from.tag, colour=r.2,
+                         size=factor(r.2))) +
+         geom_point() +
          geom_vline(xintercept = rsq, linetype=2) +
          #geom_abline(intercept = 0, slope = 1) +
-         scale_x_continuous("R\u00B2 Values (0-1)", limits=c(0,1)) + 
-         scale_y_continuous("Distance to 1kgSNPs associated with tagSNP (bp)", labels = comma_format()) + 
-         scale_colour_manual(values = 
+         scale_x_continuous("R\u00B2 Values (0-1)", limits=c(0,1)) +
+         scale_y_continuous("Distance to 1kgSNPs associated with tagSNP (bp)", labels = comma_format()) +
+         scale_colour_manual(values =
                              c("Yes" = "Red", "No" = "Black")) +
          scale_size_manual(values = c("Yes" = 2, "No" = 1)) +
          ggtitle(paste("Distance between tagSNP ",
-                            "and 1kgSNP\nOverlapping biofeature: ", 
+                            "and 1kgSNP\nOverlapping biofeature: ",
                             bio[i], sep="")) +
          theme(legend.position = "none") +
          facet_wrap(chromosome ~ tag.snp.id)
@@ -1406,7 +1409,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                            bio[i],"_R2vsDist_riskSNP.pdf",sep=""),
                 plot=p,
              dpi = 600,
-             width = save.width, 
+             width = save.width,
              height = save.height,
              units = "mm")
          cat("Finished plotting ", i, "/",length(bio), "\n")
@@ -1418,7 +1421,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
   if(heatmap){
 
 
-    all.s <- table( dat[which(dat$R.squared>=rsq),"bio.feature"], 
+    all.s <- table( dat[which(dat$R.squared>=rsq),"bio.feature"],
                   dat[which(dat$R.squared>=rsq) ,"tag.snp.id"] )
 #    rownames(all.s) <- paste(rownames(all.s), "\n(n=", rowSums(all.s), ")", sep="")
 #    colnames(all.s) <- paste(colnames(all.s), "\n(n=", colSums(all.s), ")", sep="")
@@ -1469,7 +1472,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       #              sepwidth=c(0.01, 0.01),
       #              sepcolor="black",
       #              notecol="black",
-      #              notecex=0.75, 
+      #              notecex=0.75,
       #              Rowv=FALSE,
       #              Colv=TRUE,
       #              cexRow=1,
@@ -1477,8 +1480,8 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       #              keysize=0.75,
       #              dendrogram=c("none"),
       #              main = paste(
-      #                           "tagSNP vs Biofeature\n1kgSNP with", 
-      #                           "R\u00B2 >=", 
+      #                           "tagSNP vs Biofeature\n1kgSNP with",
+      #                           "R\u00B2 >=",
       #                           " ", rsq, sep=""))
     } else {
       plot.here <- ggplot(all.s, aes(variable, sig, label=value)) +
@@ -1517,8 +1520,8 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
 #              keysize=0.75,
 #              dendrogram=c("none"),
 #              main = paste(
-#                           "tagSNP vs Biofeature\n1kgSNP with ", 
-#                           "R\u00B2 >=", 
+#                           "tagSNP vs Biofeature\n1kgSNP with ",
+#                           "R\u00B2 >=",
 #                           " ", rsq, sep="")
 #              )
     }
@@ -1528,7 +1531,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                             "/plots/FunciSNP_heatmap.eps", sep=""),
              plot=plot.here, bg = "white",
              dpi = 600,
-             width = save.width, 
+             width = save.width,
              height = save.height,
              units = "mm")
       #	message("\nSee ",paste("FunciSNP.",package.version("FunciSNP"),
@@ -1540,9 +1543,9 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
   }
   if(genomicSum){
     if(rsq==0){
-      dat.m <- reshape::melt(dat[,c(23:28)], 
-                    measure.vars=c("Promoter", 
-                                   "utr5", 
+      dat.m <- reshape::melt(dat[,c(23:28)],
+                    measure.vars=c("Promoter",
+                                   "utr5",
                                    "Exon",
                                    "Intron",
                                    "utr3",
@@ -1555,7 +1558,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       dat.m <- rbind(t,tt)
 
 
-      qd <- ggplot(dat.m, aes(variable, fill=factor(value))) + 
+      qd <- ggplot(dat.m, aes(variable, fill=factor(value))) +
       geom_bar() +
       ggtitle("1kgSNPs distribution across Genomic Features") +
       theme(axis.text.x = element_text(angle = 90, size = text.size*.8, hjust = 1)) +
@@ -1569,7 +1572,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                           "/plots/Genomic_Summary_All.pdf", sep=""),
                plot=qd,
                dpi = 600,
-               width = save.width, 
+               width = save.width,
                height = save.height,
                units = "mm")
       }else{
@@ -1581,10 +1584,10 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
       dat$r2 <- paste("All 1kgSNPs", sep="")
       t <- dat[which(dat$R.squared >= rsq), ]
       t$r2 <- paste("R\u00B2 >= ", rsq, sep="")
-      dat <- rbind(t, dat) 
-      dat.m <- reshape::melt(dat[,c(23:29)], 
-                    measure.vars=c("Promoter", 
-                                   "utr5", 
+      dat <- rbind(t, dat)
+      dat.m <- reshape::melt(dat[,c(23:29)],
+                    measure.vars=c("Promoter",
+                                   "utr5",
                                    "Exon",
                                    "Intron",
                                    "utr3",
@@ -1598,7 +1601,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
 
       plot.title = paste("Distribution of 1kgSNP SNPs across Genomic Features\n",
                          " at R\u00B2 cut-off of", rsq, sep=" ")
-      qp<-ggplot(dat.m, aes(variable, fill=factor(value))) + 
+      qp<-ggplot(dat.m, aes(variable, fill=factor(value))) +
       geom_bar(position="fill") +
       ggtitle(plot.title) +
       theme(axis.text.x = element_text(angle = 90, size = text.size*.8, hjust = 1)) +
@@ -1613,7 +1616,7 @@ FunciSNPplot <- function (dat, rsq = 0, split = FALSE, splitbysnp = FALSE,
                              sep=""),
                   plot=qp,
              dpi = 600,
-             width = save.width, 
+             width = save.width,
              height = save.height,
              units = "mm")
          }else{
@@ -1666,9 +1669,8 @@ yapply <- function(X,FUN, ...) {
   mapply(FUN,X,INDEX=index, NAMES=namesX,MoreArgs=list(...))
 }
 
-## FunciSNP Code                                                                 
-## Author: Simon G. Coetzee; Houtan Noushmehr, PhD                               
-## scoetzee@gmail.com; houtan@usp.br                                         
-## 310.570.2362                                                                  
+## FunciSNP Code
+## Author: Simon G. Coetzee; Houtan Noushmehr, PhD
+## scoetzee@gmail.com; houtan@usp.br
+## 310.570.2362
 ## All rights reversed.
-
