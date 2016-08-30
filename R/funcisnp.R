@@ -603,7 +603,9 @@ FilterByFeatures <- function(bio.features.file = NULL, tag.snp.name,
     snps.included <- close.snp.ranges
   } else {
     bio.features.file.interval <- import.bed(bio.features.file)
-    bio.features.file.interval <- IRanges::sort(bio.features.file.interval)
+    # IRanges::sort is depreciated. Trying to see if base::sort is appropriate
+    #bio.features.file.interval <- IRanges::sort(bio.features.file.interval)
+    bio.features.file.interval <- sort(bio.features.file.interval)
     elementMetadata(bio.features.file.interval) <- NULL
     elementMetadata(bio.features.file.interval)[, "feature"] <- ending.in.bed[[length(ending.in.bed)]]
     overlaps <- findOverlaps(bio.features.file.interval,
