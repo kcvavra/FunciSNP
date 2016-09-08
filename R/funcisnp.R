@@ -1676,3 +1676,68 @@ yapply <- function(X,FUN, ...) {
 ## scoetzee@gmail.com; houtan@usp.br
 ## 310.570.2362
 ## All rights reversed.
+
+# Adding on a FunciSNP SNP test to ensure that the TagSNPs will be
+# available on the HG build. Adapting from the getFNPs script for this
+# purpose. KCV 09/07/2016
+## Justification is that some of the SNPs I have in a list are not 
+## available in the hg 19 build.
+testFSNPs <- function(snp.regions.file,  
+                        verbose = TRUE, search.window = 200000,
+                      primary.server = "ebi"){
+  snp.region <- ReadRegionsFile(snp.regions.file, search.window)
+  message("Testing Numer of TagSNPs: " , nrow(snp.region),
+          " representing ", length(unique(snp.region$snp.name)), " unique SNPS.")
+  populations <- CreatePopulations(primary.server)
+  
+  #Skipping lines 279 to 291
+  
+  tag.snp.names <- paste(snp.region$snp.name, ":", snp.region$snp.ethno, sep ="")
+  snp.list <- lapply(tag.snp.names, CreateTagSNP)
+  names(snp.list) <- tag.snp.names
+  
+  test.snps = list()
+  negative.snps = list()
+  
+  for (each in tag.snp.names){
+    tag.snp.complete <- try(PullInVariants(tag.snp.name = each, 
+        snp.list = snp.list, primary.server = primary.server,
+        snp.region = snp.region, populations = populations, verbose = TRUE,
+        window.size = search.window, par.threads = 1), silent = TRUE)
+    tag.snp.error <- inherits(tag.snp.complete, "try-error")
+    if(tag.snp.error){
+      message(tag.snp.complete)
+      if(identical(length(grep("not in 1000 genomes data",tag.snp.complete[[1]])),
+                   as.integer(0))){
+        while(tag.snp.error) {
+          tag.snp.complete <- try(PullInVariants(tag.snp.name = each, snp.list = snp.list,
+                                                 primary.server = primary.server,
+                                                 snp.region = snp.region, populations = populations,
+                                                 verbose = TRUE, window.size = search.window, par.threads = 1),
+                                  silent=TRUE)
+          tag.snp.error <- inherits(tag.snp.complete, "try-error")
+          
+        }
+      } else 
+          message ("\n #### The Tag SNP ", each,
+               " seems to be unavailable from the current ",
+               "1000 genomes data \n",
+               " please check this Tag SNP on the 1000 genomes browser: \n",
+               "http://browser.1000genomes.org/")
+          negative.snps <- c(each, snp.region)
+      
+    }
+    if(!(tag.snp.error)){
+      test.snps <- c(each)
+    }
+      
+  }
+  
+  #test.snps <- try()try(PullInVariants(tag.snp.names, snp.list, primary.server,
+  #snp.region, populations, verbose,
+  #window.size, par.threads = 1), silent=FALSE)
+  return(test.snps)
+  write.table(negative.snps, file = "negative_SNPS.txt", row.names = FALSE, col.names = FALSE, sep = "\t")
+  write.table(test.snps, file = "positive_SNPS.txt", row.names = FALSE, col.names = FALSE, sep = "\t")
+
+}
