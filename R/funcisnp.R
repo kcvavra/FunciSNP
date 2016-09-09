@@ -1696,8 +1696,8 @@ testFSNPs <- function(snp.regions.file,
   snp.list <- lapply(tag.snp.names, CreateTagSNP)
   names(snp.list) <- tag.snp.names
   
-  test.snps = list()
-  negative.snps = list()
+  test.snps = c()
+  negative.snps = c()
   
   for (each in tag.snp.names){
     tag.snp.complete <- try(PullInVariants(tag.snp.name = each, 
@@ -1706,38 +1706,30 @@ testFSNPs <- function(snp.regions.file,
         window.size = search.window, par.threads = 1), silent = TRUE)
     tag.snp.error <- inherits(tag.snp.complete, "try-error")
     if(tag.snp.error){
-      message(tag.snp.complete)
-      if(identical(length(grep("not in 1000 genomes data",tag.snp.complete[[1]])),
-                   as.integer(0))){
-        while(tag.snp.error) {
-          tag.snp.complete <- try(PullInVariants(tag.snp.name = each, snp.list = snp.list,
-                                                 primary.server = primary.server,
-                                                 snp.region = snp.region, populations = populations,
-                                                 verbose = TRUE, window.size = search.window, par.threads = 1),
-                                  silent=TRUE)
-          tag.snp.error <- inherits(tag.snp.complete, "try-error")
-          
-        }
-      } else 
           message ("\n #### The Tag SNP ", each,
                " seems to be unavailable from the current ",
                "1000 genomes data \n",
                " please check this Tag SNP on the 1000 genomes browser: \n",
                "http://browser.1000genomes.org/")
-          negative.snps <- c(each, snp.region)
+          negative.snps <- c(negative.snps,each)}
       
-    }
     if(!(tag.snp.error)){
-      test.snps <- c(each)
+      test.snps <- c(test.snps,each)
     }
       
   }
   
+  # Now that we have the different SNPS, we want to match them back to the file
+  SNP.List <- read.table(file = snp.regions.file, header=FALSE, sep="\t")
+  #Subset the vectors to create new lists matching the positive and negative SNPs
+  negative.list <- subset(SNP.List, negative.snps %in% V2)
+  positive.list <- subset(SNP.List, test.snps %in% V2)
+  
   #test.snps <- try()try(PullInVariants(tag.snp.names, snp.list, primary.server,
   #snp.region, populations, verbose,
   #window.size, par.threads = 1), silent=FALSE)
+  write.table(negative.list, file = "negative_SNPS.txt", row.names = FALSE, col.names = FALSE, sep = "\t")
+  write.table(positive.list, file = "positive_SNPS.txt", row.names = FALSE, col.names = FALSE, sep = "\t")
   return(test.snps)
-  write.table(negative.snps, file = "negative_SNPS.txt", row.names = FALSE, col.names = FALSE, sep = "\t")
-  write.table(test.snps, file = "positive_SNPS.txt", row.names = FALSE, col.names = FALSE, sep = "\t")
 
 }
