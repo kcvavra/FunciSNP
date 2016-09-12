@@ -1720,10 +1720,12 @@ testFSNPs <- function(snp.regions.file,
   }
   
   # Now that we have the different SNPS, we want to match them back to the file
-  SNP.List <- read.table(file = snp.regions.file, header=FALSE, sep="\t")
+  SNP.List <- read.csv(file = snp.regions.file, header=FALSE, sep="\t", stringsAsFactors = FALSE)
+  SNP.List2 <- SNP.List
+  SNP.List2$tag <- paste(SNP.List2$V2, SNP.List$V3, sep=':') 
   #Subset the vectors to create new lists matching the positive and negative SNPs
-  negative.list <- subset(SNP.List, negative.snps %in% V2)
-  positive.list <- subset(SNP.List, test.snps %in% V2)
+  negative.list <- SNP.List[is.element(SNP.List2$tag, negative.snps),]
+  positive.list <- SNP.List[is.element(SNP.List2$tag, test.snps),]
   
   #test.snps <- try()try(PullInVariants(tag.snp.names, snp.list, primary.server,
   #snp.region, populations, verbose,
